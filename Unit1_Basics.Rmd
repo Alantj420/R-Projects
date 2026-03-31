@@ -15,3 +15,29 @@ temp <- c(24.5,27.1,22.8,26.3,29.0)
 temp
 ```
 
+##Loading and inspecting a dataset:
+```{r}
+data("airquality")
+head(airquality)
+
+```
+
+##Exploring the Structure:
+```{r}
+str(airquality)
+```
+
+##Summary Statistics:
+```{r}
+summary(airquality)
+```
+
+```{r}
+mean(airquality$Ozone) #gies the output of NA because of the presence of missing values/NAs
+
+mean(airquality$Ozone, na.rm = TRUE) # this gives mean result because we tell R to ingnore the NAs
+
+colSums(is.na(airquality)) #colSums(is.na()) can be used to get an idea of the NAs in the dataframe
+
+```
+
