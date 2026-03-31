@@ -1,0 +1,17 @@
+---
+title: "R Learning Project"
+author: "Alan Thomas Joshy"
+date: "2026-03-31"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The following is my first vector in this learning project, a set of hypothetical temperature readings from hypothetical reef survey sites
+```{r}
+temp <- c(24.5,27.1,22.8,26.3,29.0)
+temp
+```
+
