@@ -41,3 +41,35 @@ colSums(is.na(airquality)) #colSums(is.na()) can be used to get an idea of the N
 
 ```
 
+##Basic Arithmetic andvariable manipulation:
+```{r}
+10+5
+10-5
+10*5
+10/5
+10^2
+10%%2
+10%%3
+```
+
+```{r}
+#working with a Numeric Variable
+depth <- 15
+depth_feet <- depth * 3.281
+depth
+depth_feet
+
+#Updating varibale
+depth <- depth+15      #depth is now 30
+depth
+```
+
+R can let us modify a whole vector instead of having to loop, eg
+```{r}
+Temperature_C <- c(25,26,27,28,28)
+Temperature_f <- Temperature_C +32
+Temperature_f   # all the values of the vector is converted to farhenheit, which can be very useful wehen working with large datasets...
+
+```
+
+
