@@ -7,33 +7,45 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(vegan)
 ```
 
+This document records my progress working through a structured R learning plan, with all examples framed around marine biology and environmental science. It covers the foundational skills of working in R — data types, loading and inspecting datasets, basic arithmetic, and variable manipulation — using datasets relevant to ecology and marine research.
+
 The following is my first vector in this learning project, a set of hypothetical temperature readings from hypothetical reef survey sites
+
 ```{r}
 temp <- c(24.5,27.1,22.8,26.3,29.0)
 temp
 ```
+Printing the vector confirms R has stored all five values. Notice that R displays the index number in square brackets at the start of each line of output — [1] simply means the first value in that line is the first element of the vector.
 
-##Loading and inspecting a dataset:
+## Loading and inspecting a dataset:
+
+Before working with marine datasets, we can use R's built-in airquality dataset to practice loading and inspecting data. This dataset contains daily air quality measurements from New York in 1973 — temperature, ozone, wind, and solar radiation. It is useful here because it contains missing values (NAs), which gives us a realistic data cleaning scenario that comes up constantly in environmental fieldwork.
+
 ```{r}
 data("airquality")
 head(airquality)
 
 ```
 
-##Exploring the Structure:
+head() shows us the first six rows of the dataset by default, giving a quick snapshot of what the data looks like. To understand the structure more formally — how many variables there are, what type each one is, and how many observations — we use str().
+
 ```{r}
 str(airquality)
 ```
 
-##Summary Statistics:
+str() tells us this is a data frame with 153 observations across 6 variables. Several are integers and one is a factor. To get a statistical overview of each variable — minimum, maximum, mean, and median — we use summary().
+
 ```{r}
 summary(airquality)
 ```
 
+Looking at the summary output, you can see that the Ozone and Solar.R columns contain NA values — R's way of representing missing data. This is extremely common in environmental datasets, where sensors malfunction, samples are lost, or field conditions prevent data collection. It is important to know how to detect and handle NAs before doing any analysis.
+
 ```{r}
-mean(airquality$Ozone) #gies the output of NA because of the presence of missing values/NAs
+mean(airquality$Ozone) #gives the output of NA because of the presence of missing values/NAs
 
 mean(airquality$Ozone, na.rm = TRUE) # this gives mean result because we tell R to ingnore the NAs
 
@@ -41,7 +53,12 @@ colSums(is.na(airquality)) #colSums(is.na()) can be used to get an idea of the N
 
 ```
 
-##Basic Arithmetic andvariable manipulation:
+Calling mean() on a column with NAs returns NA by default — R is being cautious, telling you the result is uncertain because data is missing. Adding na.rm = TRUE instructs R to remove the NAs before calculating. The colSums(is.na()) call gives a column-by-column count of missing values, which is a quick and useful way to assess data quality at the start of any analysis.
+
+## Basic Arithmetic andvariable manipulation:
+
+R can be used as a powerful calculator, but more importantly it allows us to store values as named variables and manipulate them — essential for any data analysis workflow.
+
 ```{r}
 10+5
 10-5
@@ -51,6 +68,8 @@ colSums(is.na(airquality)) #colSums(is.na()) can be used to get an idea of the N
 10%%2
 10%%3
 ```
+
+Beyond simple arithmetic, variables allow us to store and update values throughout an analysis. In a field context this might be something like updating a running depth measurement or recalculating a derived value.
 
 ```{r}
 #working with a Numeric Variable
@@ -64,12 +83,43 @@ depth <- depth+15      #depth is now 30
 depth
 ```
 
-R can let us modify a whole vector instead of having to loop, eg
+One of R's most powerful features is that operations apply to entire vectors at once, without needing to write a loop. This is called vectorisation and it makes working with large datasets much more efficient.
+
 ```{r}
 Temperature_C <- c(25,26,27,28,28)
-Temperature_f <- Temperature_C +32
+Temperature_f <- (Temperature_C * 9/5) +32
 Temperature_f   # all the values of the vector is converted to farhenheit, which can be very useful wehen working with large datasets...
 
 ```
 
+## Package Vegan:
+
+Base R comes with a useful set of built-in datasets and functions, but much of R's power comes from packages — collections of additional functions and datasets built by the research community. The vegan package is one of the most widely used in ecology and marine biology, providing tools for community ecology analysis, biodiversity indices, and multivariate statistics. It is loaded at the top of this document using library(vegan).
+
+```{r}
+data(dune)
+head(dune)
+```
+
+The dune dataset contains plant species abundance data from 20 survey sites. The varespec dataset contains lichen and plant species cover from 24 sites. Both share a structure identical to what you would encounter in a coral reef benthic survey — rows representing sites and columns representing species, with values indicating abundance or percent cover. The varechem dataset contains environmental measurements for the same varespec sites, analogous to water quality variables such as nutrients, pH, and temperature.
+
+```{r}
+data(varespec)
+head(varespec)
+
+data("varechem")
+head(varechem)
+```
+
+
+
+## Adapting what i did for airquality to varechem
+
+Applying the same inspection workflow to varechem confirms there are no missing values in this dataset — a relatively clean result compared to many real-world environmental datasets. The summary gives us a quick statistical overview of each environmental variable across the 24 sites.
+
+```{r}
+str(varechem)
+summary(varechem)
+
+```
 
