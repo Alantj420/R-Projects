@@ -1,0 +1,140 @@
+---
+title: "R Learning Project-Unit 2"
+author: "Alan Thomas Joshy"
+date: "2026-04-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+##Tidyverse
+
+```{r}
+reef <- data.frame(
+  site = c("Pelorus", "Orpheus", "Magnetic", "Dunk", "Heron",
+           "Pelorus", "Orpheus", "Magnetic", "Dunk", "Heron"),
+  year = c(2022, 2022, 2022, 2022, 2022,
+           2023, 2023, 2023, 2023, 2023),
+  coral_cover = c(42, 35, 18, 55, 60,
+                  38, 33, 15, 58, 62),
+  fish_abundance = c(120, 98, 45, 210, 185,
+                     110, 95, 40, 220, 190),
+  mean_temp = c(26.3, 27.1, 25.8, 27.6, 26.9,
+                26.8, 27.4, 26.1, 28.0, 27.2)
+)
+```
+
+
+Using filter() - keeps rows matching a conditon
+```{r}
+# Show only surveys from 2022
+reef |>
+  filter(year == 2022)
+
+# Show only sites with coral cover greater than 40%
+reef |> 
+  filter(coral_cover > 40)
+```
+
+```{r}
+# Coral cover greater than 40% AND (&) the year is 2023
+reef |> 
+  filter(coral_cover > 40 & year == 2023)
+
+# Mean temp greater than 27C OR (|) fish abundance greater than 200
+reef |> 
+  filter(mean_temp > 27.0 | fish_abundance > 200 )
+
+# & and |, used in filter
+
+```
+
+
+Using select() - chooses columns to keep
+```{r}
+# select only site and coral cover columns
+reef |> 
+  select(site, coral_cover)
+
+# select everything except fish abundance ( use ,-, infront of a column to exclude it)
+reef |> 
+  select(-fish_abundance)
+```
+
+
+Using mutate() - adds a new column or modifies an existing one. very useful in environmental work for calculating derived variables.
+```{r}
+# Add a new column called coral_change that calculates the difference between coral_cover and a baseline of 50%. This would tell you how far above or below a target each site is
+reef |> 
+  mutate(coral_change = coral_cover - 50)
+# Add a new column converting temperature from Celsius to Fahrenheit
+reef |> 
+  mutate(mean_F = (mean_temp * 9/5) + 32)
+# OR we can update a column instead of making a new one
+reef |> 
+  mutate(mean_temp = (mean_temp * 9/5) + 32)
+```
+
+
+Using arrange() - simply sorts the dataframe by a column
+```{r}
+# Arrange by coral cover from lowest to highest
+reef |> 
+  arrange(coral_cover)
+
+#Arrange by Highest to lowest
+reef |> 
+  arrange(desc(coral_cover))
+```
+
+
+Using summarise() - collapses the entire data frame down to a single summary row. You specify what summary stats you want
+```{r}
+# Calculate the mean and maximum coral cover across all sites and years
+reef |> 
+  summarise(mean_coral = mean(coral_cover),
+            max_coral = max(coral_cover))
+
+# Calculate the mean and maximum fish abundance across all sites and years
+reef |> 
+  summarise(mean_abundance = mean(fish_abundance),
+            max_abundance = max(fish_abundance))
+
+# Using filter() with summarise() can allow us to select certain variables and calculate summary stats
+reef |> 
+  filter(year == 2022) |> 
+  summarise(mean_abundance_2022 = mean(fish_abundance),
+            max_abundance_2022 = max(fish_abundance))
+
+#mean coral coer in 2023 
+reef |> 
+  filter(year == 2023) |> 
+  summarise(mean_cover_2023 = mean(coral_cover))
+```
+
+
+group_by() is used mostly with other verbs like summarise(), mutate(), or filter().
+```{r}
+# Calculate the mean coral cover of each site
+reef |> 
+  group_by(site) |> 
+  summarise(mean_coral = mean(coral_cover))
+
+# Calculate how much the the coral cover deviates from the mean coral cover for each site
+reef |> 
+  group_by(site) |> 
+  mutate(coral_cover_mean_difference = coral_cover - mean(coral_cover))
+```
+
+One important thing to remember — after using group_by() your data frame stays grouped until you explicitly ungroup it with ungroup(). This can cause unexpected behaviour down the line if you forget, so it's good practice to add |> ungroup() at the end when you're done:
+```{r}
+reef |> 
+  group_by(site) |> 
+  summarise(mean_coral = mean(coral_cover)) |> 
+  ungroup()
+```
+
