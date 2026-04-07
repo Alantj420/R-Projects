@@ -3,6 +3,7 @@ title: "Unit 2-Real Data Cleaning"
 author: "Alan Thomas Joshy"
 date: "2026-04-07"
 output: html_document
+knit: (function(input, ...) rmarkdown::render(input, output_dir = "../outputs"))
 ---
 
 This document applies the data wrangling skills developed in Unit 2 to a real monitoring dataset from the Australian Institute of Marine Science (AIMS). The dataset comes from the Great Barrier Reef Marine Monitoring Program and contains benthic survey data collected across multiple reef sites spanning over 30 years. The goal is to apply a complete data cleaning workflow — selecting relevant variables, handling missing values, and preparing the dataset for future analysis.

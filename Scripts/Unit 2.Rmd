@@ -3,6 +3,7 @@ title: "R Learning Project-Unit 2"
 author: "Alan Thomas Joshy"
 date: "2026-04-06"
 output: html_document
+knit: (function(input, ...) rmarkdown::render(input, output_dir = "../outputs"))
 ---
 
 ```{r setup, include=FALSE}
