@@ -138,3 +138,53 @@ reef |>
   ungroup()
 ```
 
+
+## Messy Data
+```{r}
+reef_messy <- data.frame(
+  Site.Name = c("Pelorus", "Orpheus", "Magnetic", "Dunk", "Heron"),
+  Year = c(2022, 2022, NA, 2022, 2022),
+  Coral.Cover = c(42, NA, 18, 55, 60),
+  fish_abundance = c(120, 98, 45, NA, 185),
+  mean_temp = c(26.3, 27.1, 25.8, 27.6, NA)
+)
+
+#check how many NAs 
+colSums(is.na(reef_messy))
+```
+
+
+```{r}
+# Renaming all the columns to standard conventions used in tidyverse - all lower case with underscores (snake_case)
+reef_clean <- reef_messy |> 
+  rename(site = Site.Name, year = Year,coral_cover = Coral.Cover)
+reef_clean
+```
+
+```{r}
+# Removing the rows with NA observations 
+reef_clean |> 
+  drop_na()
+
+#Replacing the NAs with meaningful values if applicable
+reef_clean |> 
+  mutate(mean_temp = replace_na(mean_temp, mean(mean_temp, na.rm = TRUE)),
+         fish_abundance = replace_na(fish_abundance, mean(fish_abundance, na.rm = TRUE)),
+         coral_cover = replace_na(coral_cover, mean(coral_cover, na.rm = TRUE)),
+         year = replace_na(year, 2022))
+```
+
+
+Using mutate() with case_when(), allows us to categorize gropued continuous variables and convert numeric code into a meaningful label
+```{r}
+reef |> 
+  mutate(health_category = case_when(
+    coral_cover < 25 ~ "Poor",
+    coral_cover < 50 ~ "Moderate",
+    coral_cover >= 50 ~ "Good"
+  ))
+```
+
+
+
+
