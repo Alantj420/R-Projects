@@ -183,8 +183,75 @@ reef |>
     coral_cover < 50 ~ "Moderate",
     coral_cover >= 50 ~ "Good"
   ))
+
+reef |> 
+  mutate(temp_range = case_when(
+    mean_temp < 26.5 ~ "Cool",
+    mean_temp < 27.5 ~ "Optimum",
+    mean_temp >= 27.5 ~ "Warm"
+  ),
+  health_category = case_when(
+    coral_cover < 25 ~ "Poor",
+    coral_cover < 50 ~ "Moderate",
+    coral_cover >= 50 ~ "Good"
+  ))
 ```
 
+
+## Joining Datasets
+left_join() — keeps all rows from the left dataset, adds matching data from the right
+inner_join() — keeps only rows that appear in both datasets
+full_join() — keeps all rows from both datasets
+```{r}
+coral_survey <- data.frame(
+  site = c("Pelorus", "Orpheus", "Magnetic", "Dunk"),
+  coral_cover = c(42, 35, 18, 55)
+)
+
+water_quality <- data.frame(
+  site = c("Pelorus", "Orpheus", "Magnetic", "Heron"),
+  mean_temp = c(26.3, 27.1, 25.8, 26.9),
+  dissolved_oxygen = c(7.2, 6.8, 7.5, 7.1)
+)
+```
+
+```{r}
+coral_survey |> left_join(water_quality, by = "site")
+
+coral_survey |> inner_join(water_quality, by = "site")
+
+coral_survey |> full_join(water_quality, by = "site")
+```
+
+```{r}
+reef_2022 <- reef |> 
+  filter(year == 2022)
+
+reef_2023 <- reef |> 
+  filter(year == 2023)
+
+reef_2022 |> left_join(reef_2023, by = "site")
+reef_change <- reef_2022 |> full_join(reef_2023, by = "site")
+
+reef_change |> 
+  mutate(coral_change = coral_cover.y - coral_cover.x,
+         fish_change = fish_abundance.y - fish_abundance.x) |> 
+  select(site, coral_change, fish_change, temp_2022 = mean_temp.x, temp_2023 = mean_temp.y)
+```
+
+
+## Reshaping Data between Wide and Long Formats
+
+Most marine datasets/datasets in general, when humans record are in wide format, where each variable has its own column, but this is not preferred by R or ggplot2 for analysis or plotting.
+```{r}
+reef_long <- reef |> 
+  pivot_longer(cols = c(coral_cover, fish_abundance, mean_temp),
+               names_to = "variable",
+               values_to = "value")
+
+reef_long |> pivot_wider(names_from = "variable",
+                         values_from = "value")
+```
 
 
 
