@@ -1,0 +1,75 @@
+---
+title: "Unit 2-Real Data Cleaning"
+author: "Alan Thomas Joshy"
+date: "2026-04-07"
+output: html_document
+---
+
+This document applies the data wrangling skills developed in Unit 2 to a real monitoring dataset from the Australian Institute of Marine Science (AIMS). The dataset comes from the Great Barrier Reef Marine Monitoring Program and contains benthic survey data collected across multiple reef sites spanning over 30 years. The goal is to apply a complete data cleaning workflow — selecting relevant variables, handling missing values, and preparing the dataset for future analysis.
+Australian Institute of Marine Science (AIMS). (2014). Great Barrier Reef Marine Monitoring Program - Coral (MMP). https://doi.org/10.25845/5cc64f29b35a1, accessed 07-Apr-2026.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+The raw dataset is loaded using read_csv() from the tidyverse readr package. Unlike base R's read.csv(), read_csv() is faster, automatically detects column types including dates, and produces a tibble rather than a standard data frame. The dataset contains 1488 rows and 35 columns, with a mix of character, numeric, and date variables.
+
+```{r}
+coral <- read_csv("../data/coral.csv")
+```
+```{r}
+head(coral)
+str(coral)
+colSums(is.na(coral))
+```
+
+The raw dataset contains 35 columns, many of which are administrative, scoring metrics, or derived variables not needed for ecological analysis. Using select() we retain only the ecologically meaningful variables and rename them to consistent snake_case following tidyverse conventions. The selected variables cover benthic cover categories, coral demographics, disturbance history, and physical site characteristics.
+
+Note that juv5.abun.nf and juv5.d.nf represent juvenile coral abundance (raw count) and density (per m² of available substrate) respectively, for corals under 5cm in length, excluding solitary Fungiidae. The RANK column was inspected but excluded — metadata confirmed it identifies the primary disturbance where multiple disturbances occurred in a year, with all surveyed rows recording a value of 1, making it uninformative for analysis.
+
+```{r}
+simple_coral <- coral |> 
+  select(reef = REEF, latitude = LATITUDE, longitude = LONGITUDE, nrm_region = NRM_REGION,subregion, depth = DEPTH, date = Date, year = yr, algae = A, macro_algae = MA, abiotic = AB, hard_coral = HC, soft_coral = SC, coral_cover = CoralCover, acropora = Acr, juv_abun = juv5.abun.nf, juv_density = juv5.d.nf, silt = ST, disturbance = DISTURBANCE)
+
+colSums(is.na(simple_coral))
+```
+
+Real world ecological datasets are rarely clean. The AIMS dataset contains rows where no survey was conducted in a given year — these are placeholder rows used for data management purposes and contain no benthic measurements. Before any analysis, these rows must be identified and removed.
+
+#Cleaning
+```{r}
+clean_simple_coral <- simple_coral |> 
+  drop_na(date)
+```
+
+Rows with no survey conducted can be reliably identified by the absence of a date value — if no survey took place, no date was recorded. Using drop_na(date) removes only these rows, reducing the dataset from 1488 to 1215 observations while retaining all legitimate survey records. Importantly, we use drop_na(date) rather than a blanket drop_na() to avoid accidentally removing rows that have NAs in other columns for legitimate reasons.
+
+```{r}
+clean_simple_coral
+
+summary(clean_simple_coral)
+
+colSums(is.na(clean_simple_coral))
+```
+
+
+replacing NAs
+
+After removing unsurveyed rows, two columns still contain NAs — disturbance (66 NAs) and juv_abun (97 NAs). These require different treatment based on their ecological meaning.
+
+For disturbance, the metadata records four categories: c (crown-of-thorns starfish, Acanthaster solaris), d (disease), s (storm or cyclone), and n (no disturbance observed). The 66 NA values cannot be confidently assigned to any of these categories — they represent surveys where disturbance status was simply not recorded. Replacing these with n would be misleading, implying a surveyor confirmed no disturbance when in reality the data is absent. Instead they are recoded as "nr" (not recorded) to maintain transparency.
+
+For juv_abun, the 97 NAs are left in place. Juvenile coral counts were not recorded at every survey, and removing these rows would unnecessarily reduce the dataset. When juvenile abundance is used in calculations, na.rm = TRUE will be applied as needed.
+
+```{r}
+clean_simple_coral <- clean_simple_coral |> 
+  mutate(disturbance = replace_na(disturbance, "nr"))
+
+#Final Checks on Cleaned Dataset
+colSums(is.na(clean_simple_coral))
+summary(clean_simple_coral)
+nrow(clean_simple_coral)
+```
+
+After cleaning, the dataset contains 1215 survey records across multiple GBR reef sites spanning 1992 to 2024. All selected variables are complete except juv_abun and juv_density, which retain NAs only where counts were genuinely not recorded. The dataset is now ready for exploratory analysis and visualisation in Unit 3.
