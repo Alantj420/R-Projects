@@ -1,0 +1,18 @@
+---
+title: "Unit 2-Real Data Cleaning ii"
+author: "Alan Thomas Joshy"
+date: "2026-04-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+
+```{r}
+Cover <- read_csv("../data/ltmp_hc_sc_a_by_site/ltmp_hc_sc_a_by_site.csv")
+```
+
