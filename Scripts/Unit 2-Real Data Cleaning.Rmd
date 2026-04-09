@@ -18,10 +18,11 @@ The raw dataset is loaded using read_csv() from the tidyverse readr package. Unl
 
 ```{r}
 coral <- read_csv("../data/coral.csv")
-```
-```{r}
+
 head(coral)
+
 str(coral)
+
 colSums(is.na(coral))
 ```
 
