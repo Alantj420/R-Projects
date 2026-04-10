@@ -1,5 +1,5 @@
 ---
-title: "Unit 2-Data Visualisation"
+title: "Unit 3-Data Visualisation"
 author: "Alan Thomas Joshy"
 date: "2026-04-10"
 output: html_document
@@ -9,24 +9,89 @@ knit: (function(input, ...) rmarkdown::render(input, output_dir = "../outputs"))
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
 ```
 
-## R Markdown
+```{r}
+clean_coral <- read_csv("../data/clean_coral.csv")
+str(clean_coral)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+clean_cover <- read_csv("../data/clean_cover.csv")
+str(clean_cover)
 
-```{r cars}
-summary(cars)
+clean_cover <- clean_cover |> 
+  mutate(site_no = as.character(site_no),
+         year_code = as.character(year_code))
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+coral_cover_vs_macro_algae <- ggplot(data = clean_coral, aes(x = coral_cover, y = macro_algae, colour = nrm_region)) +
+  geom_point() +
+  labs(title = "Coral cover vs Macroalgae cover on GBR Reefs",
+       x = "Coral Cover (%)",
+       y = "Macroalgae Cover(%)",
+       colour = "NRM Region") +
+  theme_classic()
+print(coral_cover_vs_macro_algae)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+coral_by_year <- clean_coral |> 
+  group_by(year) |> 
+  summarise(mean_coral = mean(coral_cover))
+
+mean_coral_cover <- ggplot(data = coral_by_year, aes(x = year, y = mean_coral)) +
+  geom_line() +
+  labs(title = "Mean coral cover in GBR reefs over time",
+       x = "Year",
+       y = "Mean Coral Cover (%)") +
+  theme_classic()
+  
+print(mean_coral_cover)
+```
+
+```{r}
+coral_by_year_region <- clean_coral |> 
+  group_by(year, nrm_region) |> 
+  summarise(mean_coral = mean(coral_cover))
+
+NRM_plot <- ggplot(data = coral_by_year_region, aes(x = year, y = mean_coral, colour = nrm_region)) +
+  geom_line() +
+  labs(title = "Mean Coral Cover on GBR reefs over time by region",
+       x = "Year",
+       y = "Mean Coral Cover (%)",
+       colour = "NRM Region",
+       caption = "Source : AIMS Long Term Monitoring Program") +
+  theme_classic()
+
+print(NRM_plot)
+```
+
+```{r}
+bar_chart <- ggplot(data = coral_by_year_region, aes(x = nrm_region, y = mean_coral, fill = nrm_region)) +
+  geom_bar(stat = "summary", fun = "mean") +
+  labs(title = "Mean Coral Cover on GBR Reefs by region",
+       x = "NRM Region",
+       y = "Mean Coral",
+       caption = "Source : AIMS Long Term Monitoring Program") +
+  theme_classic()
+
+print(bar_chart)
+```
+
+```{r}
+box_plot <- ggplot(data = clean_coral, aes(x = nrm_region, y = coral_cover, fill = nrm_region)) +
+  geom_boxplot() +
+  labs(title = "Distribution of coral cover by NRM Region",
+       x = "NRM Region",
+       y = "Coral Cover (%)",
+       fill = "NRM Region") +
+  theme_classic()
+
+print(box_plot)
+```
+
+
+
