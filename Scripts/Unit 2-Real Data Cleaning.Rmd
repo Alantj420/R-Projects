@@ -75,3 +75,8 @@ nrow(clean_simple_coral)
 ```
 
 After cleaning, the dataset contains 1215 survey records across multiple GBR reef sites spanning 1992 to 2024. All selected variables are complete except juv_abun and juv_density, which retain NAs only where counts were genuinely not recorded. The dataset is now ready for exploratory analysis and visualisation in Unit 3.
+
+```{r}
+write_csv(clean_simple_coral,"../data/clean_coral.csv")
+```
+

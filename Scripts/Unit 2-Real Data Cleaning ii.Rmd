@@ -92,3 +92,9 @@ cover_wide |> filter(visit_no == 0)
 ```
 
 Final inspection confirms no missing values across any column — a notably clean result for a real world dataset of this size. Cover values are all within ecologically realistic ranges for GBR reef surveys. One anomaly worth noting is that 15 rows across 5 reefs have visit_no == 0, all from June 1992 — the earliest surveys in the dataset. This likely reflects a coding convention used at the start of the monitoring program before the visit numbering system was formalised, rather than a data error. These rows contain valid cover measurements and are retained, but flagged here for transparency.
+
+```{r}
+write_csv(cover_wide,"../data/clean_cover.csv")
+```
+
+
