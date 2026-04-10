@@ -3,6 +3,7 @@ title: "Unit 2-Real Data Cleaning ii"
 author: "Alan Thomas Joshy"
 date: "2026-04-08"
 output: html_document
+knit: (function(input, ...) rmarkdown::render(input, output_dir = "../outputs"))
 ---
 
 This document applies the Unit 2 data cleaning workflow to a second real AIMS dataset — the Long Term Monitoring Program (LTMP) benthic cover dataset. Unlike the previous cleaning exercise, this dataset presented a different structural challenge: the data arrives in long format, with four separate rows per site visit representing different benthic cover categories. The cleaning workflow here therefore includes reshaping the data to wide format as a core step, in addition to the standard inspection, renaming, and type correction steps.
