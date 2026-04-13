@@ -7,10 +7,14 @@ knit: (function(input, ...) rmarkdown::render(input, output_dir = "../outputs"))
 
 ---
 
+This document covers data visualisation in R using the ggplot2 package, which is part of the tidyverse. All plots use real benthic monitoring data from the AIMS Long Term Monitoring Program on the Great Barrier Reef. The document progresses from basic scatter plots through to multi-panel figures, demonstrating how visualisation can reveal ecological patterns that would be invisible in a table of numbers.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 ```
+
+Both cleaned datasets are loaded directly from the processed data folder. Note that site_no and year_code in clean_cover revert to numeric when saved and reloaded as a CSV — these are converted back to character type on loading since they are identifiers rather than measurements.
 
 ```{r}
 clean_coral <- read_csv("../data/clean_coral.csv")
@@ -25,6 +29,8 @@ clean_cover <- clean_cover |>
          year_code = as.character(year_code))
 ```
 
+Every ggplot is built from the same core components layered on top of each other — the data, the aesthetic mappings (which variables map to which visual properties like x, y, colour, and size), and the geom (the type of plot). Additional layers control labels, themes, and other visual properties. This layered approach means plots can be built up incrementally, adding complexity one layer at a time.
+The first plot examines the relationship between coral cover and macroalgae cover across all GBR survey sites, coloured by NRM region. Coral and macroalgae compete for space on reefs — where one is abundant the other tends to be scarce, so a negative relationship is expected.
 
 ```{r}
 coral_cover_vs_macro_algae <- ggplot(data = clean_coral, aes(x = coral_cover, y = macro_algae, colour = nrm_region)) +
@@ -34,8 +40,13 @@ coral_cover_vs_macro_algae <- ggplot(data = clean_coral, aes(x = coral_cover, y 
        y = "Macroalgae Cover(%)",
        colour = "NRM Region") +
   theme_classic()
+
 print(coral_cover_vs_macro_algae)
 ```
+The plot shows a clear negative relationship between coral cover and macroalgae — as coral cover increases, macroalgae decreases. This reflects the well-documented competitive dynamic on coral reefs where algae rapidly colonises space when coral cover declines due to disturbance or chronic stress. The Fitzroy region (green) stands out with the highest macroalgae values, likely reflecting elevated nutrient loads from agricultural runoff in that catchment.
+
+
+To examine temporal trends, coral cover is first summarised by calculating the mean across all sites for each year using group_by() and summarise() from dplyr. This produces a single mean coral cover value per year which can then be plotted as a line graph.
 
 ```{r}
 coral_by_year <- clean_coral |> 
@@ -51,6 +62,10 @@ mean_coral_cover <- ggplot(data = coral_by_year, aes(x = year, y = mean_coral)) 
   
 print(mean_coral_cover)
 ```
+The time series reveals a striking long term pattern. Coral cover was highest in the mid-1990s before declining sharply around 1998-2002, coinciding with the 1998 mass bleaching event — one of the most severe on record at the time. A partial recovery in the mid-2000s was followed by further declines around 2016-2018, corresponding to the catastrophic back-to-back bleaching events of 2016 and 2017. A tentative recovery appears in the most recent years of the record.
+
+
+Grouping by both year and NRM region before summarising allows separate trend lines to be plotted for each region. Mapping colour to nrm_region inside aes() tells ggplot to draw a separate coloured line for each region automatically.
 
 ```{r}
 coral_by_year_region <- clean_coral |> 
@@ -68,18 +83,30 @@ NRM_plot <- ggplot(data = coral_by_year_region, aes(x = year, y = mean_coral, co
 
 print(NRM_plot)
 ```
+Separating by region reveals that the GBR-wide trend masks considerable regional variation. The Burdekin region shows the most dramatic long term decline, from approximately 70% coral cover in the early 1990s to around 35% today. The Mackay Whitsunday region maintained relatively stable cover until a sharp crash around 2017, consistent with the direct impact of Cyclone Debbie. The Wet Tropics consistently shows lower coral cover throughout the record, likely reflecting chronic turbidity and nutrient stress from catchment runoff rather than acute disturbance events.
+
+
+A bar chart summarises mean coral cover for each NRM region across the entire monitoring period. Note that when using pre-summarised data, stat = "identity" tells ggplot to use the values directly rather than calculating its own summary.
 
 ```{r}
 bar_chart <- ggplot(data = coral_by_year_region, aes(x = nrm_region, y = mean_coral, fill = nrm_region)) +
   geom_bar(stat = "summary", fun = "mean") +
   labs(title = "Mean Coral Cover on GBR Reefs by region",
        x = "NRM Region",
-       y = "Mean Coral",
+       y = "Mean Coral (%)",
        caption = "Source : AIMS Long Term Monitoring Program") +
   theme_classic()
 
 print(bar_chart)
+
+ggsave("../outputs/plots/Bar_chart.jpeg",
+       width = 8,
+       height = 6,
+       dpi = 300)
 ```
+
+
+While bar charts show a single summary value per group, box plots display the full distribution of values — the median, spread, and outliers. This makes them more informative for ecological data where variability is as important as the central tendency.
 
 ```{r}
 box_plot <- ggplot(data = clean_coral, aes(x = nrm_region, y = coral_cover, fill = nrm_region)) +
@@ -92,6 +119,64 @@ box_plot <- ggplot(data = clean_coral, aes(x = nrm_region, y = coral_cover, fill
 
 print(box_plot)
 ```
+The box plot reveals that all regions show considerable variability in coral cover, with wide interquartile ranges reflecting the range of reef conditions and disturbance histories within each region. The median is not centred within the box for most regions, indicating skewed distributions — more observations at lower coral cover values with a tail of higher cover sites. This kind of skewness is common in coral cover data and has implications for which statistical tests are appropriate, which will be explored in Unit 4.
 
 
+To examine how disturbance type relates to coral cover, mean coral cover is calculated for each disturbance category. The single-letter codes in the raw data are recoded to descriptive labels using case_when() inside mutate() before plotting, making the figure self-explanatory without needing a separate key.
 
+```{r}
+coral_by_disturbance <- clean_coral |> 
+  group_by(disturbance) |> 
+  summarise(mean_coral = mean(coral_cover)) |> 
+  mutate(disturbance = case_when(
+    disturbance == "b" ~ "Bleaching",
+    disturbance == "c" ~ "Crown of Thorns Starfish",
+    disturbance == "d" ~ "Disease",
+    disturbance == "f" ~ "Flood",
+    disturbance == "n" ~ "None",
+    disturbance == "nr" ~ "Not Recorded",
+    disturbance == "s" ~ "Storm/Cyclone",
+    disturbance == "u" ~ "Unknown"
+  ))
+
+print(coral_by_disturbance)
+
+disturbance_plot <- ggplot(data = coral_by_disturbance, aes(x = disturbance, y = mean_coral, fill = disturbance)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Mean coral cover by disturbance type",
+       x = "Disturbance Type",
+       y = "Mean Coral Cover (%)",
+       fill = "Disturbance Type") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(disturbance_plot)
+
+ggsave("../outputs/plots/disturbance_plot.jpeg", 
+       width = 8, 
+       height = 6, 
+       dpi = 300)
+```
+Storm and cyclone disturbance is associated with the lowest mean coral cover, reflecting the immediate physical destruction caused by wave action and debris. Bleaching and flood disturbance also show notably lower coral cover than undisturbed reefs. Interestingly, crown-of-thorns starfish and disease show relatively high associated coral cover — this may reflect the fact that these disturbances are recorded at the time of the survey before the full ecological impact has taken effect, or that they tend to occur on reefs that were otherwise in good condition.
+
+
+facet_wrap() splits a single plot into multiple panels, one for each level of a grouping variable, by adding a single extra layer to the ggplot call. The ~ symbol is read as "by" — so facet_wrap(~ nrm_region) means "split the plot by NRM region". This is particularly useful in ecology for comparing the same relationship or trend across multiple sites, regions, or species without producing a cluttered multi-line plot.
+
+```{r}
+NRM_plot_facet <- ggplot(data = coral_by_year_region, aes(x = year, y = mean_coral)) +
+  geom_line() +
+  labs(title = "Mean Coral Cover on GBR reefs over time by region",
+       x = "Year",
+       y = "Mean Coral Cover (%)",
+       caption = "Source : AIMS Long Term Monitoring Program") +
+  theme_classic() +
+  facet_wrap( ~ nrm_region)
+
+print(NRM_plot_facet)
+
+ggsave("../outputs/plots/NRM_plot_facet.jpeg", 
+       width = 8, 
+       height = 6, 
+       dpi = 300)
+```
+The faceted plot makes the regional differences immediately apparent in a way that the single multi-line plot could not. Each panel shares the same axes, making direct visual comparison straightforward. The Mackay Whitsunday crash around 2017 and the Burdekin long term decline are both clearly visible, as is the consistently lower baseline in the Wet Tropics. Figures like this — clean, labelled, and saved at publication resolution using ggsave() — are the kind of output that belongs in a portfolio or research report.
