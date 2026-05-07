@@ -1,0 +1,16 @@
+---
+title: "Marine Biology Statistics"
+author: "Alan Thomas Joshy"
+date: "2026-04-13"
+output: html_document
+knit: (function(input, ...) rmarkdown::render(input, output_dir = "../outputs"))
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+
+clean_coral <- read_csv("data/clean_coral.csv")
+str(clean_coral)
+```
